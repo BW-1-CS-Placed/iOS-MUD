@@ -11,6 +11,7 @@ import SpriteKit
 import GameplayKit
 
 class GameViewController: UIViewController {
+    let apiController = APIController()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +23,12 @@ class GameViewController: UIViewController {
             view.ignoresSiblingOrder = true
             view.showsFPS = true
             view.showsNodeCount = true
+        }
+        
+        if apiController.key == nil {
+            DispatchQueue.main.async {
+                self.performSegue(withIdentifier: "ShowLoginSegue", sender: self)
+            }
         }
     }
 
@@ -35,5 +42,12 @@ class GameViewController: UIViewController {
 
     override var prefersStatusBarHidden: Bool {
         return true
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ShowLoginSegue" {
+            guard let detailVC = segue.destination as? LoginViewController else { return }
+            detailVC.apiController = apiController
+        }
     }
 }
