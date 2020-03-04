@@ -55,8 +55,10 @@ class LoginViewController: UIViewController {
             apiController.login(user: user) { error in
                 if let error = error {
                     NSLog("\(#file):L\(#line): Configuration failed inside \(#function) with error: \(error)")
-                } else {
-                    self.dismiss(animated: true)
+                } else if apiController.key != nil {
+                    DispatchQueue.main.async {
+                        self.dismiss(animated: true)
+                    }
                 }
             }
         } else if loginSegmentedControl.selectedSegmentIndex == 1 { // Signup
@@ -65,8 +67,10 @@ class LoginViewController: UIViewController {
             apiController.register(user: user) { error in
                 if let error = error {
                     NSLog("\(#file):L\(#line): Configuration failed inside \(#function) with error: \(error)")
-                } else {
-                    self.dismiss(animated: true)
+                } else if apiController.key != nil {
+                    DispatchQueue.main.async {
+                        self.dismiss(animated: true)
+                    }
                 }
             }
         }
