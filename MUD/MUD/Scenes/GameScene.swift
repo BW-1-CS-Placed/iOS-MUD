@@ -10,55 +10,119 @@ import SpriteKit
 import GameplayKit
 
 class GameScene: SKScene {
-    var player: SKSpriteNode!
+    var playerNode: SKSpriteNode!
     var mapNode: SKTileMapNode!
+    let cameraNode = SKCameraNode()
     
     var playerSpeed: TimeInterval = 0.5
     
     override func sceneDidLoad() {
+        setUp()
         layoutScene()
     }
     
-    override func didMove(to view: SKView) {
+    func setUp() {
+        if let map = self.childNode(withName: "Map") as? SKTileMapNode, let tileSet = SKTileSet(named: "Sample Grid Tile Set") {
+            let noiseMap = createNoiseMap()
+            map.enableAutomapping = true
+            for col in 0..<map.numberOfColumns {
+                for row in 0..<map.numberOfRows {
+                    let val = noiseMap.value(at: vector2(Int32(row),Int32(col)))
+                    switch val {
+                    case -1.0..<(-0.5):
+                        if let g = tileSet.tileGroups.first(where: {
+                            ($0.name ?? "") == "Water"}) {
+                            map.setTileGroup(g, forColumn: col, row: row)
+                        }
+                    default:
+                        if let g = tileSet.tileGroups.first(where: {
+                            ($0.name ?? "") == "Grass"}) {
+                            map.setTileGroup(g, forColumn: col, row: row)
+                        }
+                    }
+                 }
+            }
+            self.mapNode = map
+        }
         
+        if let somePlayer = self.childNode(withName: "Player") as? SKSpriteNode {
+            playerNode = somePlayer
+            playerNode.physicsBody?.isDynamic = true
+            playerNode.physicsBody?.affectedByGravity = false
+        }
+        
+        addChild(cameraNode)
+        camera = cameraNode
+    }
+    
+    @objc
+    func handleSwipe(_ sender: UISwipeGestureRecognizer) {
+        if sender.direction == .left {
+            moveLeft()
+        } else if sender.direction == .right {
+            moveRight()
+        } else if sender.direction == .up {
+            moveUp()
+        } else if sender.direction == .down {
+            moveDown()
+        }
+    }
+    
+    override func didMove(to view: SKView) {
+        let upSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        let downSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+            
+        upSwipe.direction = .up
+        downSwipe.direction = .down
+        leftSwipe.direction = .left
+        rightSwipe.direction = .right
+
+        view.addGestureRecognizer(leftSwipe)
+        view.addGestureRecognizer(rightSwipe)
+        view.addGestureRecognizer(upSwipe)
+        view.addGestureRecognizer(downSwipe)
     }
     
     func moveUp() {
         let moveAction = SKAction.moveBy(x: 0, y: 128, duration: playerSpeed)
-        player.run(moveAction)
+        playerNode.run(moveAction)
     }
     
     func moveDown() {
         let moveAction = SKAction.moveBy(x: 0, y: -128, duration: playerSpeed)
-        player.run(moveAction)
+        playerNode.run(moveAction)
     }
     
     func moveLeft() {
         let moveAction = SKAction.moveBy(x: -128, y: 0, duration: playerSpeed)
-        player.run(moveAction)
+        playerNode.run(moveAction)
     }
     
     func moveRight() {
         let moveAction = SKAction.moveBy(x: 128, y: 0, duration: playerSpeed)
-        player.run(moveAction)
+        playerNode.run(moveAction)
     }
     
     
     func touchDown(atPoint pos: CGPoint) {
-        let val = abs(pos.y) / abs(pos.x)
-        if val > 0.99 {
-            if pos.y > 0 {
-                moveUp()
-            } else {
-                moveDown()
-            }
-        } else {
-           if pos.x > 0 {
-                moveRight()
-            } else {
-                moveLeft()
-            }
-        }
+//        let x = pos.x - playerNode.position.x
+//        let y = pos.y - playerNode.position.y
+//        let val = abs(y) / abs(x)
+//        if val > 0.7 {
+//            if pos.y > 0 {
+//                moveUp()
+//            } else {
+//                moveDown()
+//            }
+//        } else {
+//           if pos.x > 0 {
+//                moveRight()
+//            } else {
+//                moveLeft()
+//            }
+//        }
     }
     
     func touchMoved(toPoint pos: CGPoint) {
@@ -91,39 +155,11 @@ class GameScene: SKScene {
     
     
     override func update(_ currentTime: TimeInterval) {
-        
+        cameraNode.position = playerNode.position
     }
     
     func layoutScene() {
-        if let map = self.childNode(withName: "Map") as? SKTileMapNode {
-            let noiseMap = createNoiseMap()
-            let tileSet = SKTileSet(named: "Sample Grid Tile Set")!
-            map.enableAutomapping = true
-            for col in 0..<map.numberOfColumns {
-                for row in 0..<map.numberOfRows {
-                    let val = noiseMap.value(at: vector2(Int32(row),Int32(col)))
-                    switch val {
-                    case -1.0..<(-0.5):
-                        if let g = tileSet.tileGroups.first(where: {
-                            ($0.name ?? "") == "Water"}) {
-                            map.setTileGroup(g, forColumn: col, row: row)
-                        }
-                    default:
-                        if let g = tileSet.tileGroups.first(where: {
-                            ($0.name ?? "") == "Grass"}) {
-                            map.setTileGroup(g, forColumn: col, row: row)
-                        }
-                    }
-                 }
-            }
-            self.mapNode = map
-        }
         
-        if let somePlayer = self.childNode(withName: "Player") as? SKSpriteNode {
-            player = somePlayer
-            player.physicsBody?.isDynamic = true
-            player.physicsBody?.affectedByGravity = false
-        }
     }
     
     func createNoiseMap() -> GKNoiseMap {
