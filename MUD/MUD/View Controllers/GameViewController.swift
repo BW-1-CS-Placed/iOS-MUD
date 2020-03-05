@@ -17,19 +17,20 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
         
         if let view = self.view as! SKView? {
-            let scene = GameScene(size: view.bounds.size)
-            scene.scaleMode = .aspectFill
-            view.presentScene(scene)
+            if let scene = SKScene(fileNamed: "GameScene") {
+                scene.scaleMode = .aspectFill
+                view.presentScene(scene)
+            }
             view.ignoresSiblingOrder = true
             view.showsFPS = true
             view.showsNodeCount = true
         }
         
-        if apiController.key == nil {
-            DispatchQueue.main.async {
-                self.performSegue(withIdentifier: "ShowLoginSegue", sender: self)
-            }
-        }
+//        if apiController.key == nil {
+//            DispatchQueue.main.async {
+//                self.performSegue(withIdentifier: "ShowLoginSegue", sender: self)
+//            }
+//        }
     }
 
     override var shouldAutorotate: Bool {

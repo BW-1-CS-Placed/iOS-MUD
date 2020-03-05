@@ -30,8 +30,9 @@ class APIController {
     
     func login(user: UserLogin, completion: @escaping (NetworkError?) -> Void) {
         let url = baseURL.appendingPathComponent("login")
+        print(url.absoluteString)
         var request = URLRequest(url: url)
-        request.httpMethod = HTTPMethod.post.rawValue
+        request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         do {
@@ -43,7 +44,38 @@ class APIController {
             return
         }
         
-        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            print(String(data: data!, encoding: .utf8)!)
+            if let response = response as? HTTPURLResponse,
+                response.statusCode != 200 {
+                if let error = error {
+                    print(error)
+                }
+                print(response.statusCode)
+//                completion(.responseError)
+//                return
+            }
+            
+            if let error = error {
+                NSLog("\(#file):L\(#line): Error fetching user from server in function \(#function): \(error)")
+                completion(.otherError(error))
+                return
+            }
+            
+            guard let data = data else {
+                NSLog("\(#file):L\(#line): No data returned from request in function \(#function)")
+                completion(.noData)
+                return
+            }
+            
+            do {
+                self.key = try JSONDecoder().decode(String.self, from: data)
+                completion(nil)
+            } catch {
+                NSLog("\(#file):L\(#line): Configuration failed inside \(#function) with error: \(error)")
+                completion(.badDecode)
+            }
+        }.resume()
     }
     
     func register(user: UserRegister, completion: @escaping (NetworkError?) -> Void) {
@@ -61,11 +93,15 @@ class APIController {
             return
         }
         
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let response = response as? HTTPURLResponse,
                 response.statusCode != 200 {
-                completion(.responseError)
-                return
+                if let error = error {
+                    print(error)
+                }
+                print(response.statusCode)
+//                completion(.responseError)
+//                return
             }
             
             if let error = error {
