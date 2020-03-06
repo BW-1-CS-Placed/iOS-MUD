@@ -25,7 +25,7 @@ enum NetworkError: Error {
 import Foundation
 
 class APIController {
-    var key: String? = "ae16e26fbb4f23d60124ef81c479c19d9250fa4f"
+    var key: String?  = "ae16e26fbb4f23d60124ef81c479c19d9250fa4f"
     let baseURL = URL(string: "https://placed-mud.herokuapp.com/api/")!
     
     func login(user: UserLogin, completion: @escaping (NetworkError?) -> Void) {

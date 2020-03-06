@@ -184,7 +184,7 @@ class GameScene: SKScene {
             moveAction = SKAction.moveBy(x: -distance, y: 0, duration: playerSpeed)
         }
         
-        apiController?.move(Direction.north, completion: { (result) in
+        apiController?.move(direction, completion: { (result) in
             switch result {
             case .success(let roomName):
                 if self.setRoom(with: roomName) {

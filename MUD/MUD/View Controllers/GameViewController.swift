@@ -28,11 +28,11 @@ class GameViewController: UIViewController {
         }
         
         
-//        if apiController.key == nil {
-//            DispatchQueue.main.async {
-//                self.performSegue(withIdentifier: "ShowLoginSegue", sender: self)
-//            }
-//        }
+        if apiController.key == nil {
+            DispatchQueue.main.async {
+                self.performSegue(withIdentifier: "ShowLoginSegue", sender: self)
+            }
+        }
     }
 
     override var shouldAutorotate: Bool {
