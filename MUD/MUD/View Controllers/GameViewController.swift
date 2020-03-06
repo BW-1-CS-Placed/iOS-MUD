@@ -15,15 +15,18 @@ class GameViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         if let view = self.view as! SKView? {
-            let scene = GameScene(size: view.bounds.size)
-            scene.scaleMode = .aspectFill
-            view.presentScene(scene)
+            if let scene = SKScene(fileNamed: "GameScene") as? GameScene {
+                scene.scaleMode = .aspectFill
+                scene.apiController = apiController
+                view.presentScene(scene)
+            }
+            
             view.ignoresSiblingOrder = true
             view.showsFPS = true
             view.showsNodeCount = true
         }
+        
         
         if apiController.key == nil {
             DispatchQueue.main.async {

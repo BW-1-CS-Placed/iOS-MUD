@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SpriteKit
 
 class LoginViewController: UIViewController {
     var apiController: APIController?
@@ -57,6 +58,9 @@ class LoginViewController: UIViewController {
                     NSLog("\(#file):L\(#line): Configuration failed inside \(#function) with error: \(error)")
                 } else if apiController.key != nil {
                     DispatchQueue.main.async {
+                        if let scene = SKScene(fileNamed: "GameScene") as? GameScene {
+                            scene.setUp()
+                        }
                         self.dismiss(animated: true)
                     }
                 }
