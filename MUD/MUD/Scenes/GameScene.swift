@@ -12,9 +12,21 @@ import GameplayKit
 class GameScene: SKScene {
     var playerNode: SKSpriteNode!
     var mapNode: SKTileMapNode!
-    let cameraNode = SKCameraNode()
+    var mapArray = [[Room?]]()
+    var cameraNode: SKCameraNode!
+    var tileSet: SKTileSet = SKTileSet(named: "Sample Grid Tile Set")!
     
+    var currentRoom: Room?
+    var apiController: APIController? {
+        didSet {
+            setUp()
+        }
+    }
+    var rooms = [Room]()
     var playerSpeed: TimeInterval = 0.5
+    
+    var house: SKTileGroup!
+    var water: SKTileGroup!
     
     override func sceneDidLoad() {
         setUp()
@@ -22,49 +34,122 @@ class GameScene: SKScene {
     }
     
     func setUp() {
-        if let map = self.childNode(withName: "Map") as? SKTileMapNode, let tileSet = SKTileSet(named: "Sample Grid Tile Set") {
-            let noiseMap = createNoiseMap()
-            map.enableAutomapping = true
-            for col in 0..<map.numberOfColumns {
-                for row in 0..<map.numberOfRows {
-                    let val = noiseMap.value(at: vector2(Int32(row),Int32(col)))
-                    switch val {
-                    case -1.0..<(-0.5):
-                        if let g = tileSet.tileGroups.first(where: {
-                            ($0.name ?? "") == "Water"}) {
-                            map.setTileGroup(g, forColumn: col, row: row)
-                        }
-                    default:
-                        if let g = tileSet.tileGroups.first(where: {
-                            ($0.name ?? "") == "Grass"}) {
-                            map.setTileGroup(g, forColumn: col, row: row)
-                        }
-                    }
-                 }
+        guard let apiController = apiController else { return }
+        house = tileSet.tileGroups.first(where: { ($0.name ?? "") == "House" })!
+        water = tileSet.tileGroups.first(where: { ($0.name ?? "") == "Water" })!
+        let range = 0..<100
+        for col in range {
+            mapArray.append([])
+            for _ in range {
+                mapArray[col].append(nil)
             }
-            self.mapNode = map
         }
+        
+        if let map = self.childNode(withName: "Map") as? SKTileMapNode {
+            mapNode = map
+        }
+        refreshMap()
         
         if let somePlayer = self.childNode(withName: "Player") as? SKSpriteNode {
             playerNode = somePlayer
             playerNode.physicsBody?.isDynamic = true
             playerNode.physicsBody?.affectedByGravity = false
+            apiController.fetchPlayerLocation { result in
+                switch result {
+                case .success(let name):
+                    self.setRoom(with: name)
+                case .failure(let error):
+                    print(error)
+                }
+            }
         }
         
-        addChild(cameraNode)
-        camera = cameraNode
+        if let someCamera = self.childNode(withName: "Camera") as? SKCameraNode {
+            cameraNode = someCamera
+            camera = cameraNode
+        }
+    }
+    
+    func refreshMap() {
+        guard let map = mapNode, let apiController = apiController else { return }
+        apiController.fetchRooms { result in
+            switch result {
+            case .success(let rooms):
+                self.rooms = rooms
+                if let room = rooms.first {
+                    self.recurseMap(room: room, col: map.numberOfColumns / 2, row: map.numberOfRows / 2)
+                    guard let position = self.getLocationOfRoom(with: self.currentRoom?.title ?? "") else { return }
+                    DispatchQueue.main.async {
+                        self.playerNode.position = map.centerOfTile(atColumn: position.col, row: position.row)
+                    }
+                }
+            case .failure(let error):
+                print("\(error)")
+            }
+        }
+
+    }
+    
+    func recurseMap(room: Room, col: Int, row: Int) {
+        
+        mapNode.setTileGroup(house, forColumn: col, row: row)
+        mapArray[col][row] = room
+        
+        let north = mapNode.tileGroup(atColumn: col + 1, row: row) != nil
+        let south = mapNode.tileGroup(atColumn: col - 1, row: row) != nil
+        let east = mapNode.tileGroup(atColumn: col, row: row + 1) != nil
+        let west = mapNode.tileGroup(atColumn: col, row: row - 1) != nil
+        if (north || room.north == 0) && (south || room.south == 0) && (east || room.east == 0) && (west || room.west == 0) {
+            fillWithWater()
+            return
+        }
+        
+        if !north, room.north != 0, let newRoom = getRoom(with: room.north) {
+            recurseMap(room: newRoom, col: col + 1, row: row)
+        }
+        if !south, room.south != 0, let newRoom = getRoom(with: room.south) {
+            recurseMap(room: newRoom, col: col - 1, row: row)
+        }
+        if !east, room.east != 0, let newRoom = getRoom(with: room.east) {
+            recurseMap(room: newRoom, col: col, row: row + 1)
+        }
+        if !west, room.west != 0, let newRoom = getRoom(with: room.west) {
+            recurseMap(room: newRoom, col: col, row: row - 1)
+        }
+    }
+    
+    func fillWithWater() {
+        for col in 0..<mapNode.numberOfColumns {
+            for row in 0..<mapNode.numberOfRows {
+                if mapNode.tileGroup(atColumn: col, row: row) == nil {
+                    mapNode.setTileGroup(water, forColumn: col, row: row)
+                }
+            }
+        }
+    }
+    
+    func getRandomPosition() -> CGPoint {
+        var x = -1
+        var y = -1
+        
+        while mapNode.tileGroup(atColumn: y, row: x)?.name ?? "" != "House" {
+            y = Int.random(in: 1..<mapNode.numberOfColumns)
+            x = Int.random(in: 1..<mapNode.numberOfRows)
+        }
+        
+        return CGPoint(x: (x * 64), y: (y * 64))
     }
     
     @objc
     func handleSwipe(_ sender: UISwipeGestureRecognizer) {
         if sender.direction == .left {
-            moveLeft()
+            move(direction: .west)
         } else if sender.direction == .right {
-            moveRight()
+            move(direction: .east)
         } else if sender.direction == .up {
-            moveUp()
+            move(direction: .north)
         } else if sender.direction == .down {
-            moveDown()
+            move(direction: .south)
         }
     }
     
@@ -73,56 +158,80 @@ class GameScene: SKScene {
         let downSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
         let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
         let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-            
+        
         upSwipe.direction = .up
         downSwipe.direction = .down
         leftSwipe.direction = .left
         rightSwipe.direction = .right
-
+        
         view.addGestureRecognizer(leftSwipe)
         view.addGestureRecognizer(rightSwipe)
         view.addGestureRecognizer(upSwipe)
         view.addGestureRecognizer(downSwipe)
     }
     
-    func moveUp() {
-        let moveAction = SKAction.moveBy(x: 0, y: 128, duration: playerSpeed)
-        playerNode.run(moveAction)
+    func move(direction: Direction) {
+        let distance = mapNode.tileSize.height
+        let moveAction: SKAction
+        switch direction {
+        case .north:
+            moveAction = SKAction.moveBy(x: 0, y: distance, duration: playerSpeed)
+        case .south:
+            moveAction = SKAction.moveBy(x: 0, y: -distance, duration: playerSpeed)
+        case .east:
+            moveAction = SKAction.moveBy(x: distance, y: 0, duration: playerSpeed)
+        case .west:
+            moveAction = SKAction.moveBy(x: -distance, y: 0, duration: playerSpeed)
+        }
+        
+        apiController?.move(Direction.north, completion: { (result) in
+            switch result {
+            case .success(let roomName):
+                if self.setRoom(with: roomName) {
+                    self.playerNode.run(moveAction)
+                } else {
+                    print("Could not find room!")
+                }
+            case .failure(let error):
+                print(error)
+            }
+        })
     }
     
-    func moveDown() {
-        let moveAction = SKAction.moveBy(x: 0, y: -128, duration: playerSpeed)
-        playerNode.run(moveAction)
+    @discardableResult
+    func setRoom(with name: String) -> Bool {
+        var roomFound = false
+        for room in rooms {
+            if room.title == name {
+                currentRoom = room
+                roomFound = true
+            }
+        }
+        return roomFound
     }
     
-    func moveLeft() {
-        let moveAction = SKAction.moveBy(x: -128, y: 0, duration: playerSpeed)
-        playerNode.run(moveAction)
+    func getRoom(with id: Int) -> Room? {
+        for room in rooms {
+            if room.id == id {
+                return room
+            }
+        }
+        return nil
     }
     
-    func moveRight() {
-        let moveAction = SKAction.moveBy(x: 128, y: 0, duration: playerSpeed)
-        playerNode.run(moveAction)
+    func getLocationOfRoom(with name: String) -> (row: Int, col: Int)? {
+        for col in 0..<mapArray.count {
+            for row in 0..<mapArray[col].count {
+                if mapArray[col][row]?.title == name {
+                    return (row, col)
+                }
+            }
+        }
+        return nil
     }
-    
     
     func touchDown(atPoint pos: CGPoint) {
-//        let x = pos.x - playerNode.position.x
-//        let y = pos.y - playerNode.position.y
-//        let val = abs(y) / abs(x)
-//        if val > 0.7 {
-//            if pos.y > 0 {
-//                moveUp()
-//            } else {
-//                moveDown()
-//            }
-//        } else {
-//           if pos.x > 0 {
-//                moveRight()
-//            } else {
-//                moveLeft()
-//            }
-//        }
+        
     }
     
     func touchMoved(toPoint pos: CGPoint) {
@@ -155,7 +264,9 @@ class GameScene: SKScene {
     
     
     override func update(_ currentTime: TimeInterval) {
-        cameraNode.position = playerNode.position
+        DispatchQueue.main.async {
+            self.cameraNode.position = self.playerNode.position
+        }
     }
     
     func layoutScene() {

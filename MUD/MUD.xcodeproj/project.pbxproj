@@ -16,6 +16,9 @@
 		0E1E26D5240EC00300F2916E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0E1E26D4240EC00300F2916E /* Assets.xcassets */; };
 		0E1E26D8240EC00300F2916E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0E1E26D6240EC00300F2916E /* LaunchScreen.storyboard */; };
 		0E1E26E3240EC00300F2916E /* MUDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1E26E2240EC00300F2916E /* MUDTests.swift */; };
+		0E2965F22411F6A70073B217 /* MoveResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2965F12411F6A70073B217 /* MoveResult.swift */; };
+		0E5C1F7A2411BF5100705316 /* Room.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5C1F792411BF5100705316 /* Room.swift */; };
+		0E5C1F7C2411E92A00705316 /* Cardinal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5C1F7B2411E92A00705316 /* Cardinal.swift */; };
 		0EC57CFF24116180009EC440 /* MyTileSet.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0EC57CFD24116180009EC440 /* MyTileSet.sks */; };
 		0EC57D0024116180009EC440 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0EC57CFE24116180009EC440 /* Assets.xcassets */; };
 		0EF4BCF4240F27A500660147 /* APIController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF4BCF3240F27A500660147 /* APIController.swift */; };
@@ -46,6 +49,9 @@
 		0E1E26DE240EC00300F2916E /* MUDTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MUDTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E1E26E2240EC00300F2916E /* MUDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MUDTests.swift; sourceTree = "<group>"; };
 		0E1E26E4240EC00300F2916E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0E2965F12411F6A70073B217 /* MoveResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveResult.swift; sourceTree = "<group>"; };
+		0E5C1F792411BF5100705316 /* Room.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Room.swift; sourceTree = "<group>"; };
+		0E5C1F7B2411E92A00705316 /* Cardinal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cardinal.swift; sourceTree = "<group>"; };
 		0EC57CFD24116180009EC440 /* MyTileSet.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MyTileSet.sks; sourceTree = "<group>"; };
 		0EC57CFE24116180009EC440 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0EF4BCF3240F27A500660147 /* APIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIController.swift; sourceTree = "<group>"; };
@@ -153,6 +159,9 @@
 			isa = PBXGroup;
 			children = (
 				0EF4BCF5240F326600660147 /* User.swift */,
+				0E5C1F792411BF5100705316 /* Room.swift */,
+				0E5C1F7B2411E92A00705316 /* Cardinal.swift */,
+				0E2965F12411F6A70073B217 /* MoveResult.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -271,8 +280,11 @@
 			files = (
 				0E0E5738240F5DFC0052E5E0 /* LoginViewController.swift in Sources */,
 				0EF4BCF4240F27A500660147 /* APIController.swift in Sources */,
+				0E5C1F7A2411BF5100705316 /* Room.swift in Sources */,
+				0E5C1F7C2411E92A00705316 /* Cardinal.swift in Sources */,
 				0E1E26CE240EBFFF00F2916E /* GameScene.swift in Sources */,
 				0E1E26D0240EBFFF00F2916E /* GameViewController.swift in Sources */,
+				0E2965F22411F6A70073B217 /* MoveResult.swift in Sources */,
 				0EF4BCF6240F326600660147 /* User.swift in Sources */,
 				0E1E26C8240EBFFF00F2916E /* AppDelegate.swift in Sources */,
 			);
